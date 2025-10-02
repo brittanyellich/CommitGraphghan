@@ -80,69 +80,91 @@ export async function fetchGitHubContributions(
   const token = sessionStorage.getItem('github_token')
 
   const headers: HeadersInit = token
-    ? { Authorization: `token ${token}` }
+    ? { Authorization: `Bearer ${token}` }
     : {}
 
   const sortedYears = [...years].sort()
-  onProgress?.(10)
+  onProgress?.(20)
 
   try {
-    // First, verify the user exists
-    const userResponse = await fetch(
-        `https://api.github.com/users/${username}`,
-        { headers }
-      )
-      if (!userResponse.ok) {
-        if (userResponse.status === 404) {
-          throw new Error(`GitHub user "${username}" not found`)
-        }
-        throw new Error(`GitHub API error: ${userResponse.status}`)
-      }
-
-    onProgress?.(20)
-
     // Fetch recent events to get some contribution data
     // Note: This is limited but works without authentication
-    const eventsResponse = await fetch(`https://api.github.com/users/${username}/events?per_page=100`)
-    if (!eventsResponse.ok) {
-      throw new Error(`Failed to fetch user events: ${eventsResponse.status}`)
-    }
+    // We'll fetch contributions for the most recent year (or the first in sortedYears)
+    // GitHub's API only allows one year at a time via from/to arguments
+    // Fetch contribution data for each selected year
+    const eventsByYear: Record<number, any> = {}
 
-    const events = await eventsResponse.json()
-    onProgress?.(50)
-
-    // Since we can't get full contribution data without auth, 
-    // we'll create a demonstration pattern based on available data
-    const dailyContributions = new Map<string, number>()
-    
-    // Process events to extract contribution dates
-    events.forEach((event: any) => {
-      if (event.created_at) {
-        const date = event.created_at.split('T')[0]
-        const year = parseInt(date.split('-')[0])
-        
-        if (sortedYears.includes(year)) {
-          dailyContributions.set(date, (dailyContributions.get(date) || 0) + 1)
+    for (const year of sortedYears) {
+      const graphqlQuery = {
+        query: `
+          query($userName:String!, $from:DateTime!, $to:DateTime!) { 
+            user(login: $userName){
+              contributionsCollection(from: $from, to: $to) {
+                contributionCalendar {
+                  totalContributions
+                  weeks {
+                    contributionDays {
+                      contributionCount
+                      date
+                    }
+                  }
+                }
+              }
+            }
+          }
+        `,
+        variables: { 
+          userName: username,
+          from: `${year}-01-01T00:00:00Z`,
+          to: `${year}-12-31T23:59:59Z`
         }
       }
-    })
+
+      const eventsResponse = await fetch('https://api.github.com/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers
+        },
+        body: JSON.stringify(graphqlQuery)
+      })
+
+      if (!eventsResponse.ok) {
+        throw new Error(`Failed to fetch user contributions for year ${year}: ${eventsResponse.status}`)
+      }
+
+      eventsByYear[year] = await eventsResponse.json()
+      onProgress?.(30 + Math.floor((sortedYears.indexOf(year) / sortedYears.length) * 20))
+    }
+
+    // Merge all years' data into a single structure for further processing
+    // Use the most recent year for the "calendar" variable as before
+    const weeks = []
+    let totalContributions = 0
+    for (const year of sortedYears) {
+        const calendar = eventsByYear[year]?.data?.user?.contributionsCollection?.contributionCalendar
+        if (calendar) {
+            weeks.push(...calendar.weeks)
+            totalContributions += calendar.totalContributions
+        }
+    }
 
     onProgress?.(70)
 
-    // Fill in all dates for the requested years with simulated data
-    // Since we can't get full historical data without auth, we'll create a realistic pattern
+    // Build daily contributions map from the calendar weeks
+    const dailyContributions = new Map<string, number>()
+    for (const week of weeks) {
+      for (const day of week.contributionDays) {
+        dailyContributions.set(day.date, day.contributionCount)
+      }
+    }
+
+    // Fill in all dates for the requested years with 0 if missing
     for (const year of sortedYears) {
       const yearDates = getDatesInYear(year)
       yearDates.forEach(date => {
         if (!dailyContributions.has(date)) {
-          // Add some realistic randomized contribution data
-          const rand = Math.random()
-          if (rand < 0.3) { // 30% chance of having contributions
-            const count = Math.floor(Math.random() * 12) + 1
-            dailyContributions.set(date, count)
-          } else {
-            dailyContributions.set(date, 0)
-          }
+          dailyContributions.set(date, 0)
         }
       })
     }
@@ -164,9 +186,6 @@ export async function fetchGitHubContributions(
         contributionCalendar: yearWeeks
       }
     })
-
-    const totalContributions = Array.from(dailyContributions.values())
-      .reduce((sum, count) => sum + count, 0)
 
     const contributionData: ContributionData = {
       username,
