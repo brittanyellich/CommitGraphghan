@@ -58,7 +58,7 @@ function GraphGenerator() {
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">
-            Commit Graphghan Generator
+            Commit Graphghan Pattern Generator
           </h1>
           <p className="text-muted-foreground text-lg">
             Transform your GitHub commit graph into a beautiful corner-to-corner crochet pattern

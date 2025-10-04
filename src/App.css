@@ -67,6 +67,11 @@ body {
   color: var(--color-foreground);
 }
 
+#root {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+
 .font-mono {
   font-family: 'Fira Code', 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
 }
