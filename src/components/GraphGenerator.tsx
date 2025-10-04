@@ -91,6 +91,19 @@ function GraphGenerator() {
                     className="font-mono" 
                     disabled={loading}>
                   </TextField.Root>
+                  {!hasGitHubToken && (
+                    <div className="mt-2 flex flex-col items-center">
+                      <p className="mb-2 text-xs text-muted-foreground text-center">
+                        <strong>Note:</strong> Full GitHub contribution history requires authentication. You can get any user's public activity, but you'll need to log in with GitHub to access your full contribution history.
+                      </p>
+                      <Button
+                        onClick={handleGitHubLogin}
+                        className="w-full max-w-xs mx-auto"
+                      >
+                        <GitHubLogoIcon className="h-4 w-4" /> Login with GitHub
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 <YearSelector
@@ -132,21 +145,6 @@ function GraphGenerator() {
                     <AlertDialog.Description>{error}</AlertDialog.Description>
                   </AlertDialog.Root>
                 )}
-
-                {!hasGitHubToken && (
-                    <div>
-                    <p>
-                      <strong>Note:</strong> Full GitHub contribution history requires authentication. This demo uses recent public activity and simulated data to show pattern generation.
-                    </p>
-                    <Button
-                      onClick={handleGitHubLogin}
-                      className="w-full"
-                      >
-                      <GitHubLogoIcon className="h-4 w-4" /> Login with GitHub
-                      </Button>
-                  </div>
-                )}
-                
 
                 <Button 
                 onClick={handleGenerate} 
