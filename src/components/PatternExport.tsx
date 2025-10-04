@@ -1,7 +1,7 @@
 import { Button, Card } from '@radix-ui/themes'
 import { DownloadIcon, FileIcon } from "@radix-ui/react-icons"
 import type { ContributionData, PatternConfig } from '../types'
-import { YARN_COLORS } from './PatternGrid'
+import { YARN_COLORS, generatePatternGrid } from './PatternGrid'
 
 interface PatternExportProps {
   data: ContributionData
@@ -19,8 +19,44 @@ export function PatternExport({ data, config }: PatternExportProps) {
   const totalSquares = data.yearData.length * (PATTERN_WIDTH * PATTERN_HEIGHT)
   const borderSquares = (totalWidth * BORDER_WIDTH * 2) + (totalPatternHeight * BORDER_WIDTH * 2) + ((data.yearData.length - 1) * BORDER_WIDTH * totalWidth)
   const colors = YARN_COLORS(config.borderStyle)
-  
+
+  // Generate a printable grid for all years (stacked)
+  const getPrintableGrid = () => {
+    return data.yearData.map((yearData) => {
+      const pattern = generatePatternGrid(yearData, colors)
+      let gridStr = ""
+      for (let row = 0; row < pattern.gridRows; row++) {
+        let rowStr = ''
+        for (let col = 0; col < pattern.gridCols; col++) {
+          const idx = row * pattern.gridCols + col
+          const square = pattern.squares[idx]
+          // Find the color key by matching the color name
+          let colorKey = Object.entries(colors).find(([, v]) => v.name === square.color.name)?.[0]
+          let colorKeyNum = colorKey !== undefined ? Number(colorKey) : 5 // fallback to border
+          // Use indicator from the color object, using string key
+          rowStr += colors[colorKeyNum as keyof typeof colors].indicator || '?'
+        }
+        gridStr += rowStr + '\n'
+      }
+      return gridStr
+    }).join('')
+  }
+
   const generateInstructions = () => {
+    const borderYarn =
+      config.borderStyle === 'light'
+        ? 'Cream'
+        : config.borderStyle === 'spooky'
+        ? 'Pumpkin Orange'
+        : 'Forest Green'
+
+    const borderMode =
+      config.borderStyle === 'light'
+        ? 'Light'
+        : config.borderStyle === 'spooky'
+        ? 'Spooky'
+        : 'Dark'
+
     const instructions = `
 # ${data.username}'s GitHub Graphghan Pattern
 
@@ -42,17 +78,29 @@ Approximately ${Math.round(totalWidth * 3)}" × ${Math.round(totalHeight * 3)}" 
 - Total commits represented: ${data.totalContributions}
 - All borders are 2 squares wide
 
+## Abbreviations (US terms):
+- ch - chain
+- dc - double crochet
+- slst - slip stitch
+
 ## Instructions
 
 ### Corner-to-Corner Technique
-1. Start with a chain of 6
-2. DC in 4th chain from hook, DC in next 2 chains
-3. Continue building diagonally following the color chart
-4. Use the bobbin method for color changes
-5. Work the pattern from bottom-left to top-right
+
+Follow the pattern starting in the bottom left corner and working diagonally to the top right corner
+
+R1 - ch 6, dc in 4th ch from hook, dc in next 2 ch, turn
+R2 - ch6, dc in 4th ch from hook, dc in next 2 ch, slst in top of 3 ch loop in previous row, ch 3, 3dcs in the chain spaces, turn
+R3 - ch6, dc in 4th ch from hook, dc in next 2 ch, slst in top of 3 ch loop in previous row, ch 3, 3dcs in the chain spaces, slst in top of 3 ch loop in previous row, ch 3, 3dcs in the chain spaces, turn
+Continue in this pattern through increasing rows until you reach the full width of the pattern 
+This blanket will not be a perfect square. Once you reach the full width, continue working in the established pattern but skip the final square.
+Decreasing rows:
+When you begin decreasing, turn and slst into the 3 dcs you just made AND into the top of the ch 3 loop. Ch3, 3dcs into the ch space, slst into the top of ch3 loop.
+
+When switching colors, change on the second half of the last double crochet of the previous square
 
 ### Pattern Structure
-${data.yearData.map(year => 
+${data.yearData.map(year =>
 `- ${year.year}: ${PATTERN_WIDTH} × ${PATTERN_HEIGHT} squares (${year.totalContributions} commits)`
 ).join('\n')}
 
@@ -60,21 +108,37 @@ ${data.yearData.map(year =>
 - Follow the attached grid pattern
 - Each cell = 1 C2C square
 - Change colors as indicated in the pattern
-- Years are separated by 2-square wide ${config.borderStyle} border sections
+- Years are separated by 4-square tall ${config.borderStyle} border sections
 - Total pattern size: ${totalWidth} × ${totalHeight} squares (including borders)
 
-### Border (${config.borderStyle === 'light' ? 'Light' : 'Dark'} Style)
-All borders are 2 squares wide using ${config.borderStyle === 'light' ? 'Cream' : 'Forest Green'} yarn:
+### Pattern Grid (Printable)
+Each symbol represents a yarn color:
+${Object.values(colors).map(v => `${v.indicator} = ${v.name}`).join(', ')}
+
+Each cell in the grid below is padded to a fixed width for easier reading. For best results, print this section using a monospace font (such as Courier or Consolas) or view in a code editor.
+
+${getPrintableGrid()}
+
+### Border (${borderMode} Mode)
+All borders are 2 squares wide using ${borderYarn} yarn:
 - Top border: 2 squares tall
 - Bottom border: 2 squares tall  
 - Left border: 2 squares wide
 - Right border: 2 squares wide
-- Between years: 2 squares tall
+- Between years: 4 squares total (2 squares above and below each year section)
+
+Feel free to add an additional border around the entire blanket, such as:
+
+R1: Join yarn in the middle of an edge, ch 1, sc into same st and each st around, working a cluster of 3 sc at each corner, slst into first sc to finish round.
+
+R2: Ch 2, dc into same st and each st around, working a cluster of 3 dc at each corner, slst into first dc to finish round.
+
+R3: Ch 1, sc into same st and each st around, working a cluster of 3 dc at each corner, slst into first sc to finish round. Bind off.
 
 ### Finishing
 1. Weave in all ends securely
 2. Block if desired for crisp edges
-3. Enjoy your personalized coding blanket!
+3. Enjoy your personalized commit graph blanket!
 
 ## Pattern Statistics
 - Total squares: ${totalSquares}
@@ -129,7 +193,7 @@ Generated by Commit Graphghan Generator
             <div>
               <h4 className="font-medium mb-2">Materials</h4>
               <ul className="text-sm space-y-1 text-muted-foreground">
-                <li>Worsted weight yarn (5 colors)</li>
+                <li>Worsted weight yarn (6 colors)</li>
                 <li>Size H/8 (5.0mm) hook</li>
                 <li>Yarn needle</li>
                 <li>Scissors</li>
