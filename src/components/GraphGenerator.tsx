@@ -65,8 +65,8 @@ function GraphGenerator() {
           </p>
         </div>
 
-        <div className="grid gap-6 grid-cols-3">
-          <div className="col-span-1 space-y-6">
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-1 lg:grid-cols-3">
+          <div className="col-span-1 space-y-6 w-full">
             <Card>
               <div>
                   <h2 className="flex items-center gap-2 font-bold text-lg">
@@ -99,6 +99,7 @@ function GraphGenerator() {
                       <Button
                         onClick={handleGitHubLogin}
                         className="w-full max-w-xs mx-auto"
+                        color="cyan" 
                       >
                         <GitHubLogoIcon className="h-4 w-4" /> Login with GitHub
                       </Button>
@@ -147,17 +148,18 @@ function GraphGenerator() {
                 )}
 
                 <Button 
-                onClick={handleGenerate} 
-                disabled={loading || !username.trim()}
-                className="w-full"
-                >
-                {loading ? 'Generating...' : 'Generate Pattern'}
+                    onClick={handleGenerate} 
+                    disabled={loading || !username.trim()}
+                    className="w-full"
+                    color="cyan" 
+                    >
+                    {loading ? 'Generating...' : 'Generate Pattern'}
                 </Button>
               </div>
             </Card>
 
             {contributionData && (
-              <Card>
+              <Card className="w-full">
                 <div>
                   <h2 className="flex items-center gap-2">
                     <Pencil2Icon className="h-5 w-5" />
@@ -167,21 +169,21 @@ function GraphGenerator() {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Username:</span>
-                    <Badge variant="outline" className="font-mono">{contributionData.username}</Badge>
+                    <Badge variant="outline" className="font-mono" color="cyan" >{contributionData.username}</Badge>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Years:</span>
-                    <Badge variant="outline">{(selectedYears || []).join(', ')}</Badge>
+                    <Badge variant="outline" color="cyan" >{(selectedYears || []).join(', ')}</Badge>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Size:</span>
-                    <Badge variant="outline">
+                    <Badge variant="outline" color="cyan" >
                       {106 + 4} x {(selectedYears || []).length * 14 + ((selectedYears || []).length + 1) * 2} squares
                     </Badge>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Total commits:</span>
-                    <Badge variant="outline">{contributionData.totalContributions}</Badge>
+                    <Badge variant="outline" color="cyan" >{contributionData.totalContributions}</Badge>
                   </div>
                 </div>
               </Card>

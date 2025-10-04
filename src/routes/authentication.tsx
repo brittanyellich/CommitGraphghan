@@ -7,7 +7,6 @@ export function GitHubCallback() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
-    console.log({code})
 
     if (code) {
       // Send code to Netlify Function

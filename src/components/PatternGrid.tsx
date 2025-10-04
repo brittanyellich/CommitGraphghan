@@ -81,11 +81,11 @@ export function PatternGrid({ data, config }: PatternGridProps) {
       
       // Fill the grid with contribution data
       // Each week gets a 2-column wide strip (18 squares tall × 2 squares wide)
-      let weekColumn = 0
+      console.log({length: yearData.contributionCalendar.length})
       
-      for (let weekIndex = 0; weekIndex < yearData.contributionCalendar.length + 2; weekIndex++) {
-        if (weekColumn >= PATTERN_WIDTH) break // Stop if we exceed the pattern width
-        if (weekColumn >= BORDER_WIDTH && weekColumn <= (PATTERN_WIDTH - BORDER_WIDTH)) {
+      for (let weekIndex = 2; weekIndex < 55; weekIndex++) {
+        if (weekIndex > PATTERN_WIDTH) break // Stop if we exceed the pattern width
+        if (weekIndex >= BORDER_WIDTH && weekIndex <= (PATTERN_WIDTH - BORDER_WIDTH - 1)) {
             const week = yearData.contributionCalendar[weekIndex - 2];
             for (let dayIndex = 1; dayIndex < week.contributionDays.length + 1 && dayIndex < 8; dayIndex++) {
                 const day = week.contributionDays[dayIndex - 1]
@@ -94,8 +94,8 @@ export function PatternGrid({ data, config }: PatternGridProps) {
                 const startRow = dayIndex * 2
                 const endRow = startRow + 1
                 
-                // Each week occupies 2 columns (weekColumn * 2 and weekColumn * 2 + 1)
-                const startCol = weekColumn * 2
+                // Each week occupies 2 columns (weekIndex * 2 and weekIndex * 2 + 1)
+                const startCol = (weekIndex - 1) * 2
                 const endCol = startCol + 1
                 
                 // Fill the 2x2 area for this day
@@ -112,8 +112,6 @@ export function PatternGrid({ data, config }: PatternGridProps) {
                 }
               }
         }
-        
-        weekColumn++
       }
       
       // Flatten the grid to a 1D array for rendering
@@ -154,7 +152,7 @@ export function PatternGrid({ data, config }: PatternGridProps) {
       <div className="overflow-auto bg-white p-4 rounded-lg border">
         <div className="inline-block space-y-2">
           
-          {patterns.map((pattern, yearIndex) => (
+          {patterns.map((pattern) => (
             <div key={pattern.year}>
               <div className="flex">
                 
@@ -188,7 +186,7 @@ export function PatternGrid({ data, config }: PatternGridProps) {
         <p>Pattern size: {maxWidth + 4} × {patterns.length * patternHeight + (patterns.length + 1) * 2} squares</p>
         <p>Each year: {maxWidth} × {patternHeight} squares (53 weeks × 2 squares wide, 7 days × 2 squares tall, 2 x 2 border squares)</p>
         <p>Border: 2 squares wide on all sides and between years</p>
-        <p>Estimated finished size: ~{Math.round((maxWidth + 4) * 3)}″ × {Math.round((patterns.length * patternHeight + (patterns.length + 1) * 2) * 3)}″ (with size H hook)</p>
+        <p>Estimated finished size: ~{Math.round(maxWidth)}″ × {Math.round(patternHeight)}″ (with size H hook)</p>
       </div>
     </div>
   )
