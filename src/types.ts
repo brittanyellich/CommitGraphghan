@@ -23,7 +23,7 @@ export interface ContributionDay {
   }
   
   export interface PatternConfig {
-    borderStyle: 'light' | 'dark'
+    borderStyle: 'light' | 'dark' | 'spooky'
     squareSize: number
     years: number[]
   }

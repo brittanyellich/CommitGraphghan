@@ -33,7 +33,12 @@ export function YearSelector({ selectedYears, onYearsChange, disabled }: YearSel
             key={year}
             onClick={() => toggleYear(year)}
             disabled={disabled}
-            className="h-8"
+            className={`h-8 px-3 transition-colors ${
+                selectedYears.includes(year)
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-transparent text-foreground hover:bg-muted'
+              }`}
+            variant={selectedYears.includes(year) ? 'solid' : 'outline'}
           >
             {year}
           </Button>

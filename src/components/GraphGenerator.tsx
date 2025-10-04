@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Button, TextField, Badge, Tabs, Card, Progress, AlertDialog, Select } from '@radix-ui/themes'
-import { ExclamationTriangleIcon, GitHubLogoIcon, Pencil2Icon } from "@radix-ui/react-icons"
+import { ExclamationTriangleIcon, GitHubLogoIcon, Pencil2Icon, Half2Icon } from "@radix-ui/react-icons"
 import { PatternGrid } from './PatternGrid'
 import { YearSelector } from './YearSelector'
 import { PatternExport } from './PatternExport'
@@ -10,11 +10,14 @@ import type { ContributionData, PatternConfig } from '../types'
 function GraphGenerator() {
   const [username, setUsername] = useState('')
   const [selectedYears, setSelectedYears] = useState<number[]>([])
-  const [borderStyle, setBorderStyle] = useState<'light' | 'dark'>('light')
+  const [borderStyle, setBorderStyle] = useState<'light' | 'dark' | 'spooky'>('light')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [contributionData, setContributionData] = useState<ContributionData | null>(null)
   const [progress, setProgress] = useState(0)
+
+  // Does the GitHub session token exist?
+  const hasGitHubToken = !!sessionStorage.getItem('github_token')
 
   const handleGenerate = async () => {
     if (!username.trim()) {
@@ -66,18 +69,20 @@ function GraphGenerator() {
           <div className="col-span-1 space-y-6">
             <Card>
               <div>
-                  <h2 className="flex items-center gap-2">
-                    <GitHubLogoIcon className="h-5 w-5" />
+                  <h2 className="flex items-center gap-2 font-bold text-lg">
                     Generate Pattern
                   </h2>
                   
                 <p>
-                  Enter a GitHub username to create your graphghan pattern. Due to API limitations, recent activity and simulated data will be used for demonstration.
+                  Enter a GitHub username to create your graphghan pattern. Use the logged in user to access private and internal contribution history.
                 </p>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-4 mt-4">
                 <div className="space-y-2">
-                  {/* <Label htmlFor="username">GitHub Username</Label> */}
+                  <div className="flex items-center gap-2">
+                    <GitHubLogoIcon className="h-4 w-4" />
+                    <span className="text-sm font-medium">GitHub Username</span>
+                  </div>
                   <TextField.Root 
                     placeholder="octocat" 
                     id="username" 
@@ -94,15 +99,19 @@ function GraphGenerator() {
                   disabled={loading}
                 />
 
-                <div className="space-y-2">
-                  {/* <Label htmlFor="border-style">Border Style</Label> */}
-                  <Select.Root value={borderStyle} onValueChange={(value: 'light' | 'dark') => setBorderStyle(value)}>
+                <div className="space-y-2 w-full">
+                  <div className="flex items-center gap-2">
+                    <Half2Icon className="h-4 w-4" />
+                    <span className="text-sm font-medium">Select a Theme</span>
+                  </div>
+                  <Select.Root value={borderStyle} onValueChange={(value: 'light' | 'dark' | 'spooky') => setBorderStyle(value)}>
                     <Select.Trigger>
                       {/* <Select.Label /> */}
                     </Select.Trigger>
                     <Select.Content>
-                      <Select.Item value="light">Light Border</Select.Item>
-                      <Select.Item value="dark">Dark Border</Select.Item>
+                      <Select.Item value="light">Light Mode</Select.Item>
+                      <Select.Item value="dark">Dark Mode</Select.Item>
+                      <Select.Item value="spooky">Spooky</Select.Item>
                     </Select.Content>
                   </Select.Root>
                 </div>
@@ -124,26 +133,27 @@ function GraphGenerator() {
                   </AlertDialog.Root>
                 )}
 
-                <AlertDialog.Root>
-                  <GitHubLogoIcon className="h-4 w-4" />
-                  <AlertDialog.Description>
-                    <strong>Note:</strong> Full GitHub contribution history requires authentication. This demo uses recent public activity and simulated data to show pattern generation.
-                  </AlertDialog.Description>
-                </AlertDialog.Root>
+                {!hasGitHubToken && (
+                    <div>
+                    <p>
+                      <strong>Note:</strong> Full GitHub contribution history requires authentication. This demo uses recent public activity and simulated data to show pattern generation.
+                    </p>
+                    <Button
+                      onClick={handleGitHubLogin}
+                      className="w-full"
+                      >
+                      <GitHubLogoIcon className="h-4 w-4" /> Login with GitHub
+                      </Button>
+                  </div>
+                )}
+                
 
                 <Button 
-                  onClick={handleGenerate} 
-                  disabled={loading || !username.trim()}
-                  className="w-full"
+                onClick={handleGenerate} 
+                disabled={loading || !username.trim()}
+                className="w-full"
                 >
-                  {loading ? 'Generating...' : 'Generate Pattern'}
-                </Button>
-
-                <Button
-                 onClick={handleGitHubLogin}
-                 className="w-full"
-                >
-                  Login with GitHub
+                {loading ? 'Generating...' : 'Generate Pattern'}
                 </Button>
               </div>
             </Card>
