@@ -17,6 +17,13 @@ const renderYearSelector = (props: {
   );
 };
 
+// Helper function to get year buttons from the rendered component
+const getYearButtons = () => {
+  return screen.getAllByRole('button').filter((btn) => 
+    /^\d{4}$/.test(btn.textContent || '')
+  );
+};
+
 describe('YearSelector', () => {
   const mockOnYearsChange = vi.fn();
   const currentYear = new Date().getFullYear();
@@ -35,13 +42,13 @@ describe('YearSelector', () => {
     });
 
     it('renders the calendar icon', () => {
-      renderYearSelector({
+      const { container } = renderYearSelector({
         selectedYears: [currentYear],
         onYearsChange: mockOnYearsChange,
       });
-      // Calendar icon should be present
-      const icon = document.querySelector('.h-4.w-4');
-      expect(icon).toBeInTheDocument();
+      // Calendar icon should be present in the component
+      const icons = container.querySelectorAll('svg');
+      expect(icons.length).toBeGreaterThan(0);
     });
 
     it('renders 10 year buttons', () => {
@@ -61,9 +68,7 @@ describe('YearSelector', () => {
         selectedYears: [currentYear],
         onYearsChange: mockOnYearsChange,
       });
-      const buttons = screen.getAllByRole('button').filter((btn) => 
-        /^\d{4}$/.test(btn.textContent || '')
-      );
+      const buttons = getYearButtons();
       
       // Verify years are in descending order
       for (let i = 0; i < buttons.length - 1; i++) {
@@ -109,9 +114,7 @@ describe('YearSelector', () => {
         disabled: true,
       });
       
-      const buttons = screen.getAllByRole('button').filter((btn) => 
-        /^\d{4}$/.test(btn.textContent || '')
-      );
+      const buttons = getYearButtons();
       
       buttons.forEach((button) => {
         expect(button).toBeDisabled();
@@ -125,9 +128,7 @@ describe('YearSelector', () => {
         disabled: false,
       });
       
-      const buttons = screen.getAllByRole('button').filter((btn) => 
-        /^\d{4}$/.test(btn.textContent || '')
-      );
+      const buttons = getYearButtons();
       
       buttons.forEach((button) => {
         expect(button).not.toBeDisabled();
@@ -140,9 +141,7 @@ describe('YearSelector', () => {
         onYearsChange: mockOnYearsChange,
       });
       
-      const buttons = screen.getAllByRole('button').filter((btn) => 
-        /^\d{4}$/.test(btn.textContent || '')
-      );
+      const buttons = getYearButtons();
       
       buttons.forEach((button) => {
         expect(button).not.toBeDisabled();
